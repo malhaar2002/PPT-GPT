@@ -7,6 +7,7 @@ from pdfminer.layout import LAParams
 from pdfminer.pdfpage import PDFPage
 from PyPDF2 import PdfReader, PdfWriter
 import requests
+from api_key import api_key
 
 
 def splitting(upload_folder='upload', split_folder='split'):
@@ -98,7 +99,7 @@ def get_explanation(question):
     payload = {"question": question}
     headers = {
         "content-type": "application/json",
-        "X-RapidAPI-Key": "29a340bcd6msh79bc9e76053b5bcp1fd442jsn6625b9716291",
+        "X-RapidAPI-Key": api_key,
         "X-RapidAPI-Host": "simple-chatgpt-api.p.rapidapi.com"
     }
 
