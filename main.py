@@ -5,10 +5,11 @@ from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 from pdfminer.converter import TextConverter
 from pdfminer.layout import LAParams
 from pdfminer.pdfpage import PDFPage
-from PyPDF2 import PdfReader, PdfWriter 
+from PyPDF2 import PdfReader, PdfWriter
+import requests
 
 
-def splitting(upload_folder = 'upload', split_folder = 'split'):
+def splitting(upload_folder='upload', split_folder='split'):
     '''Do collect PDF files, split pages and save them
     '''
 
@@ -51,7 +52,7 @@ def pdf_to_text(path):
     return text
 
 
-def extraction(split_path = 'split', text_path = 'extract'):
+def extraction(split_path='split', text_path='extract'):
     '''Extract and save text files to output dir
     '''
 
@@ -79,9 +80,51 @@ def extraction(split_path = 'split', text_path = 'extract'):
                       encoding="utf-8") as text_file:
                 text_file.write(text_output)
 
+def create_prompt():
+    prompt = ""
+    text_files = os.listdir('extract')
+    for file in text_files:
+        with open(f'extract/{file}') as myfile:
+            content = f"Page {file[0]}:\n"
+            content += myfile.read()
+            prompt += content
+    prompt += "\n Explain the above text in detail, page by page. The explanation of each page should be separated by a heading that indicates the page number, along with a newline."
+    return prompt 
+
+
+def get_explanation(question):
+    url = "https://simple-chatgpt-api.p.rapidapi.com/ask"
+
+    payload = {"question": question}
+    headers = {
+        "content-type": "application/json",
+        "X-RapidAPI-Key": "29a340bcd6msh79bc9e76053b5bcp1fd442jsn6625b9716291",
+        "X-RapidAPI-Host": "simple-chatgpt-api.p.rapidapi.com"
+    }
+
+    response = requests.request("POST", url, json=payload, headers=headers)
+
+    return response.json()['answer']
+
+
+def create_document(text):
+    with open('output.txt', 'w') as f:
+        f.write(text)
+
+
+def cleanup():
+    os.system('rm -rf split/*')
+    os.system('rm -rf extract/*')
+
+
 def main():
     splitting()
     extraction()
+    prompt = create_prompt()
+    explanation = get_explanation(prompt)
+    create_document(explanation)
+    cleanup()
+
 
 if __name__ == '__main__':
     main()
